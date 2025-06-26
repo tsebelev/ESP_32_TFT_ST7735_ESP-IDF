@@ -1,5 +1,6 @@
-.cache\
-
+cache/
+.log/
+log/
 # Prerequisites
 *.d
 
@@ -52,3 +53,14 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+build/.ninja_deps
+build/.ninja_log
+build/bootloader/.ninja_log
+build/.ninja_log
+build/.ninja_deps
+build/.ninja_log
+build/bootloader/.ninja_log
+build/.ninja_log
+build/bootloader/.ninja_log
+build/.ninja_log
+build/bootloader/.ninja_log

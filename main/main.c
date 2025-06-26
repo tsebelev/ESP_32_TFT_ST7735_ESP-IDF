@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include "esp_lcd_types.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/spi_master.h"
@@ -9,6 +10,7 @@
 #include "esp_lcd_st7735.h"
 #include "esp_log.h"
 #include "esp_spiffs.h"
+#include "image.h"  // Наш файл с изображением
 
 // Распиновка 
 #define PIN_LCD_CS      5
@@ -54,7 +56,7 @@ void app_main(void)
     esp_lcd_panel_io_spi_config_t io_config = {
         .dc_gpio_num = PIN_LCD_DC,
         .cs_gpio_num = PIN_LCD_CS,
-        .pclk_hz = 40 * 1000 * 1000, // 40 MHz
+        .pclk_hz = 20 * 1000 * 1000, // 40 MHz
         .spi_mode = 0,
         .trans_queue_depth = 10,
         .lcd_cmd_bits = 8,
@@ -88,14 +90,14 @@ void app_main(void)
         {ST7735_PWCTR5, (uint8_t[]){0x8A, 0xEE}, 2, 0},
         {ST7735_VMCTR1, (uint8_t[]){0x0E}, 1, 0},
         {ST7735_INVOFF, (uint8_t[]){0x00}, 0, 0},
-        {ST7735_MADCTL, (uint8_t[]){0xC8}, 1, 0}, // Настройка ориентации
+        {ST7735_MADCTL, (uint8_t[]){0xC0}, 1, 0},//0xC8}, 1, 0}, // порядок пикселей и цветов
         {ST7735_COLMOD, (uint8_t[]){0x05}, 1, 0},
         {ST7735_GMCTRP1, (uint8_t[]){0x02, 0x1c, 0x07, 0x12, 0x37, 0x32, 0x29, 0x2d, 0x29, 0x25, 0x2B, 0x39, 0x00, 0x01, 0x03, 0x10}, 16, 0},
         {ST7735_GMCTRN1, (uint8_t[]){0x03, 0x1d, 0x07, 0x06, 0x2E, 0x2C, 0x29, 0x2D, 0x2E, 0x2E, 0x37, 0x3F, 0x00, 0x00, 0x02, 0x10}, 16, 0},
         {ST7735_NORON, (uint8_t[]){0x00}, 0, 10},
         {ST7735_DISPON, (uint8_t[]){0x00}, 0, 100},
     };
-    
+    //55
     st7735_vendor_config_t vendor_cfg = {
         .init_cmds = custom_init_cmds,
         .init_cmds_size = sizeof(custom_init_cmds) / sizeof(st7735_lcd_init_cmd_t)
@@ -117,10 +119,10 @@ void app_main(void)
     // 5. Демонстрация работы
     ESP_LOGI(TAG, "Starting display demo...");
     
+    while(1){
     // Заливка экрана разными цветами
     const uint16_t colors[] = {
         COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_BLUE,
-        COLOR_CYAN, COLOR_MAGENTA, COLOR_YELLOW, COLOR_WHITE
     };
     
     for (int i = 0; i < sizeof(colors)/sizeof(colors[0]); i++) {
@@ -144,9 +146,10 @@ void app_main(void)
         }
         
         free(line_buffer);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-
+        vTaskDelay(pdMS_TO_TICKS(3000));
+        }
+        }
+/*
     // Рисуем геометрические фигуры
     ESP_LOGI(TAG, "Drawing geometric shapes...");
     
@@ -176,6 +179,29 @@ void app_main(void)
         esp_lcd_panel_draw_bitmap(panel_handle, x, y, x+3, y+3, circle_buffer);
         vTaskDelay(pdMS_TO_TICKS(50));
     }
-
+*/
     ESP_LOGI(TAG, "Display demo completed!");
+    // 5. Вывод изображения
+    ESP_LOGI(TAG, "Displaying image...");
+    
+    // Вариант 1: Прямой вывод (требует достаточно памяти)
+     esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, LCD_WIDTH, LCD_HEIGHT, image_data);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    /*
+    // Вариант 2: Построчный вывод (более экономичный)
+    uint16_t line_buffer[LCD_WIDTH];
+    for (int y = 0; y < LCD_HEIGHT; y++) {
+        // Копируем одну строку
+        for (int x = 0; x < LCD_WIDTH; x++) {
+            line_buffer[x] = image_data[y * LCD_WIDTH + x];
+        }
+        
+        // Отправляем строку
+        esp_lcd_panel_draw_bitmap(panel_handle, 0, y, LCD_WIDTH, y+1, line_buffer);
+        
+    }
+    */
+    ESP_LOGI(TAG, "Image displayed successfully!");
+
+
 }

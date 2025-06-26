@@ -1,0 +1,10 @@
+CMake Warning at C:/Espressif/frameworks/esp-idf-v5.3.1/tools/cmake/git_submodules.cmake:4 (message):
+  Git executable was not found.  Git submodule checks will not be executed.
+  If you have any build issues at all, start by adding git executable to the
+  PATH and rerun cmake to not see this warning again.
+Call Stack (most recent call first):
+  C:/Espressif/frameworks/esp-idf-v5.3.1/tools/cmake/idf.cmake:41 (include)
+  C:/Espressif/frameworks/esp-idf-v5.3.1/tools/cmake/project.cmake:29 (include)
+  CMakeLists.txt:7 (include)
+
+
