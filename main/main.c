@@ -8,6 +8,7 @@
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_st7735.h"
 #include "esp_log.h"
+#include "esp_spiffs.h"
 
 // Распиновка 
 #define PIN_LCD_CS      5
