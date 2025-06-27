@@ -118,11 +118,14 @@ void app_main(void)
 
     // 5. Демонстрация работы
     ESP_LOGI(TAG, "Starting display demo...");
-    
+
     while(1){
     // Заливка экрана разными цветами
     const uint16_t colors[] = {
-        COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_BLUE,
+        COLOR_BLACK,
+        0xF800,
+        0x07E0,
+        0x001F, //RGB
     };
     
     for (int i = 0; i < sizeof(colors)/sizeof(colors[0]); i++) {
@@ -149,6 +152,7 @@ void app_main(void)
         vTaskDelay(pdMS_TO_TICKS(3000));
         }
         }
+        
 /*
     // Рисуем геометрические фигуры
     ESP_LOGI(TAG, "Drawing geometric shapes...");
@@ -180,6 +184,7 @@ void app_main(void)
         vTaskDelay(pdMS_TO_TICKS(50));
     }
 */
+/*
     ESP_LOGI(TAG, "Display demo completed!");
     // 5. Вывод изображения
     ESP_LOGI(TAG, "Displaying image...");
@@ -187,7 +192,7 @@ void app_main(void)
     // Вариант 1: Прямой вывод (требует достаточно памяти)
      esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, LCD_WIDTH, LCD_HEIGHT, image_data);
     vTaskDelay(pdMS_TO_TICKS(1000));
-    /*
+    
     // Вариант 2: Построчный вывод (более экономичный)
     uint16_t line_buffer[LCD_WIDTH];
     for (int y = 0; y < LCD_HEIGHT; y++) {
