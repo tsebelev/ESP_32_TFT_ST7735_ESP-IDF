@@ -90,7 +90,7 @@ void app_main(void)
         {ST7735_PWCTR5, (uint8_t[]){0x8A, 0xEE}, 2, 0},
         {ST7735_VMCTR1, (uint8_t[]){0x0E}, 1, 0},
         {ST7735_INVOFF, (uint8_t[]){0x00}, 0, 0},
-        {ST7735_MADCTL, (uint8_t[]){0xC0}, 1, 0},//0xC8}, 1, 0}, // порядок пикселей и цветов
+        {ST7735_MADCTL, (uint8_t[]){0xC8}, 1, 0},//0xC8}, 1, 0}, // порядок пикселей и цветов
         {ST7735_COLMOD, (uint8_t[]){0x05}, 1, 0},
         {ST7735_GMCTRP1, (uint8_t[]){0x02, 0x1c, 0x07, 0x12, 0x37, 0x32, 0x29, 0x2d, 0x29, 0x25, 0x2B, 0x39, 0x00, 0x01, 0x03, 0x10}, 16, 0},
         {ST7735_GMCTRN1, (uint8_t[]){0x03, 0x1d, 0x07, 0x06, 0x2E, 0x2C, 0x29, 0x2D, 0x2E, 0x2E, 0x37, 0x3F, 0x00, 0x00, 0x02, 0x10}, 16, 0},
@@ -119,7 +119,7 @@ void app_main(void)
     // 5. Демонстрация работы
     ESP_LOGI(TAG, "Starting display demo...");
 
-    while(1){
+  
     // Заливка экрана разными цветами
     const uint16_t colors[] = {
         COLOR_BLACK,
@@ -151,7 +151,7 @@ void app_main(void)
         free(line_buffer);
         vTaskDelay(pdMS_TO_TICKS(3000));
         }
-        }
+        
         
 /*
     // Рисуем геометрические фигуры
@@ -184,7 +184,7 @@ void app_main(void)
         vTaskDelay(pdMS_TO_TICKS(50));
     }
 */
-/*
+
     ESP_LOGI(TAG, "Display demo completed!");
     // 5. Вывод изображения
     ESP_LOGI(TAG, "Displaying image...");
@@ -205,7 +205,7 @@ void app_main(void)
         esp_lcd_panel_draw_bitmap(panel_handle, 0, y, LCD_WIDTH, y+1, line_buffer);
         
     }
-    */
+  
     ESP_LOGI(TAG, "Image displayed successfully!");
 
 
