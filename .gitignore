@@ -1,6 +1,7 @@
 cache/
 .log/
 log/
+build/
 # Prerequisites
 *.d
 
@@ -53,4 +54,4 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-build/
+
