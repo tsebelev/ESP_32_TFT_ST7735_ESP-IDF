@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "main",
-    "project_version":    "03525bc-dirty",
+    "project_version":    "6900a3a-dirty",
     "project_path":       "C:/Users/139179/workspaceIDE/ESP_32_TFT_ST7735_ESP-IDF",
     "idf_path":           "C:/Espress/frameworks/esp-idf-v5.3.1",
     "build_dir":          "C:/Users/139179/workspaceIDE/ESP_32_TFT_ST7735_ESP-IDF/build",

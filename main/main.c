@@ -103,13 +103,13 @@ void app_main(void)
         {ST7735_VMCTR1, (uint8_t[]){0x0E}, 1, 0},
         // Display Inversion Off
         {ST7735_INVOFF, (uint8_t[]){0x00}, 0, 0},
-<<<<<<< HEAD
+
         {ST7735_MADCTL, (uint8_t[]){0xC8}, 1, 0},//0xC8}, 1, 0}, // порядок пикселей и цветов
-=======
+
         // Memory Data Access Control: top-bottom/left-right refresh
         {ST7735_MADCTL, (uint8_t[]){0xC8}, 1, 0},//0xC8}, 1, 0}, // порядок пикселей и цветов
         // Color mode, Interface Pixel Format: RGB-565, 16-bit/pixel
->>>>>>> e1207eb9d844e32d422a4e13f9ae715ba01df0c9
+
         {ST7735_COLMOD, (uint8_t[]){0x05}, 1, 0},
         
             // Column Address Set: 2, 127+2
