@@ -1,7 +1,5 @@
-cache/
-.log/
-log/
 build/
+/build
 # Prerequisites
 *.d
 

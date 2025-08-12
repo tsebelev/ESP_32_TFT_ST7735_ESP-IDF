@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 file(MAKE_DIRECTORY
-  "C:/Espressif/frameworks/esp-idf-v5.3.1/components/bootloader/subproject"
+  "C:/Espress/frameworks/esp-idf-v5.3.1/components/bootloader/subproject"
   "C:/Users/139179/workspaceIDE/ESP_32_TFT_ST7735_ESP-IDF/build/bootloader"
   "C:/Users/139179/workspaceIDE/ESP_32_TFT_ST7735_ESP-IDF/build/bootloader-prefix"
   "C:/Users/139179/workspaceIDE/ESP_32_TFT_ST7735_ESP-IDF/build/bootloader-prefix/tmp"

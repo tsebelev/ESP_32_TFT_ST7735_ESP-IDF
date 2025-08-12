@@ -13,11 +13,11 @@
 #include "image.h"  // Наш файл с изображением
 
 // Распиновка 
-#define PIN_LCD_CS      5
-#define PIN_LCD_DC      17
-#define PIN_LCD_RST     16
+#define PIN_LCD_CS      4 //5
+#define PIN_LCD_DC      5 //17
+#define PIN_LCD_RST     3 //16
 #define PIN_LCD_SCLK    18  // SCK для VSPI
-#define PIN_LCD_MOSI    23  // MOSI для VSPI
+#define PIN_LCD_MOSI    19 //23  // MOSI для VSPI sda
 
 // Размеры дисплея (128x160 для ST7735)
 #define LCD_WIDTH       128
