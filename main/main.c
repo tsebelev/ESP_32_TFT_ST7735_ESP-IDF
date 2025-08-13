@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include "esp_lcd_types.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/spi_master.h"
@@ -8,13 +9,15 @@
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_st7735.h"
 #include "esp_log.h"
-
+#include "esp_spiffs.h"
+#include "image.h"  // Наш файл с изображением
+//
 // Распиновка 
-#define PIN_LCD_CS      5
-#define PIN_LCD_DC      17
-#define PIN_LCD_RST     16
+#define PIN_LCD_CS      4 //5
+#define PIN_LCD_DC      5 //17
+#define PIN_LCD_RST     3 //16
 #define PIN_LCD_SCLK    18  // SCK для VSPI
-#define PIN_LCD_MOSI    23  // MOSI для VSPI
+#define PIN_LCD_MOSI    19 //23  // MOSI для VSPI sda
 
 // Размеры дисплея (128x160 для ST7735)
 #define LCD_WIDTH       128
@@ -53,7 +56,7 @@ void app_main(void)
     esp_lcd_panel_io_spi_config_t io_config = {
         .dc_gpio_num = PIN_LCD_DC,
         .cs_gpio_num = PIN_LCD_CS,
-        .pclk_hz = 40 * 1000 * 1000, // 40 MHz
+        .pclk_hz = 26 * 1000 * 1000, // 40 MHz
         .spi_mode = 0,
         .trans_queue_depth = 10,
         .lcd_cmd_bits = 8,
@@ -65,7 +68,7 @@ void app_main(void)
     // 3. Конфигурация панели
     esp_lcd_panel_dev_config_t panel_config = {
         .reset_gpio_num = PIN_LCD_RST,
-        .rgb_endian = LCD_RGB_ENDIAN_BGR, // BGR порядок для ST7735
+        //.rgb_endian = LCD_RGB_ENDIAN_BGR, // BGR порядок для ST7735
         .bits_per_pixel = 16,             // RGB565
         .flags = {
             .reset_active_high = 0        // Активный уровень сброса - LOW
@@ -74,27 +77,57 @@ void app_main(void)
     
     // Переопределение команд инициализации (Black Tab)
     const st7735_lcd_init_cmd_t custom_init_cmds[] = {
-        {ST7735_SWRESET, (uint8_t[]){0x00}, 0, 150},
-        {ST7735_SLPOUT, (uint8_t[]){0x00}, 0, 255},
+		 // software reset with delay
+        {ST7735_SWRESET, (uint8_t[]){0x00}, 0, 128},
+         // Out of sleep mode with delay
+        {ST7735_SLPOUT, (uint8_t[]){0x00}, 0, 128},
+         // Framerate ctrl - normal mode. Rate = fosc/(1x2+40) * (LINE+2C+2D)
         {ST7735_FRMCTR1, (uint8_t[]){0x01, 0x2C, 0x2D}, 3, 0},
+          // Framerate ctrl - idle mode.  Rate = fosc/(1x2+40) * (LINE+2C+2D)
         {ST7735_FRMCTR2, (uint8_t[]){0x01, 0x2C, 0x2D}, 3, 0},
+           // Framerate - partial mode. Dot/Line inversion mode
         {ST7735_FRMCTR3, (uint8_t[]){0x01, 0x2C, 0x2D, 0x01, 0x2C, 0x2D}, 6, 0},
+        // Display inversion ctrl: No inversion
         {ST7735_INVCTR, (uint8_t[]){0x07}, 1, 0},
+        // Power control1 set GVDD: -4.6V, AUTO mode.
         {ST7735_PWCTR1, (uint8_t[]){0xA2, 0x02, 0x84}, 3, 0},
+        // Power control2 set VGH/VGL: VGH25=2.4C VGSEL=-10 VGH=3 * AVDD
         {ST7735_PWCTR2, (uint8_t[]){0xC5}, 1, 0},
+          // Power control3 normal mode(Full color): Op-amp current small, booster voltage
         {ST7735_PWCTR3, (uint8_t[]){0x0A, 0x00}, 2, 0},
+        // Power control4 idle mode(8-colors): Op-amp current small & medium low
         {ST7735_PWCTR4, (uint8_t[]){0x8A, 0x2A}, 2, 0},
+         // Power control5 partial mode + full colors
         {ST7735_PWCTR5, (uint8_t[]){0x8A, 0xEE}, 2, 0},
+        // VCOMH VoltageVCOM control 1: VCOMH=0x0E=2.850
         {ST7735_VMCTR1, (uint8_t[]){0x0E}, 1, 0},
+        // Display Inversion Off
         {ST7735_INVOFF, (uint8_t[]){0x00}, 0, 0},
-        {ST7735_MADCTL, (uint8_t[]){0xC8}, 1, 0}, // Настройка ориентации
+
+        {ST7735_MADCTL, (uint8_t[]){0xC8}, 1, 0},//0xC8}, 1, 0}, // порядок пикселей и цветов
+
+        // Memory Data Access Control: top-bottom/left-right refresh
+        {ST7735_MADCTL, (uint8_t[]){0xC8}, 1, 0},//0xC8}, 1, 0}, // порядок пикселей и цветов
+        // Color mode, Interface Pixel Format: RGB-565, 16-bit/pixel
+
         {ST7735_COLMOD, (uint8_t[]){0x05}, 1, 0},
+        
+            // Column Address Set: 2, 127+2
+    {0x2A, (uint8_t[]){0x00, 0x02, 0x00, 0x7F + 0x02}, 4, 0},
+    // Row Address Set: 1,159+1
+    {0x2B, (uint8_t[]){0x00, 0x01, 0x00, 0x9F + 0x01}, 4, 0},
+        
+         // Gamma Adjustments (pos. polarity). Not entirely necessary, but provides accurate colors.
         {ST7735_GMCTRP1, (uint8_t[]){0x02, 0x1c, 0x07, 0x12, 0x37, 0x32, 0x29, 0x2d, 0x29, 0x25, 0x2B, 0x39, 0x00, 0x01, 0x03, 0x10}, 16, 0},
+       // Gamma Adjustments (neg. polarity). Not entirely necessary, but provides accurate colors.
         {ST7735_GMCTRN1, (uint8_t[]){0x03, 0x1d, 0x07, 0x06, 0x2E, 0x2C, 0x29, 0x2D, 0x2E, 0x2E, 0x37, 0x3F, 0x00, 0x00, 0x02, 0x10}, 16, 0},
-        {ST7735_NORON, (uint8_t[]){0x00}, 0, 10},
-        {ST7735_DISPON, (uint8_t[]){0x00}, 0, 100},
+       // Normal Display Mode On
+        {ST7735_NORON, (uint8_t[]){0x00}, 0, 128},
+       // Display On
+        {ST7735_DISPON, (uint8_t[]){0x00}, 0, 128},
+          {0, (uint8_t[]){0x00}, 0, 255}
     };
-    
+    //55
     st7735_vendor_config_t vendor_cfg = {
         .init_cmds = custom_init_cmds,
         .init_cmds_size = sizeof(custom_init_cmds) / sizeof(st7735_lcd_init_cmd_t)
@@ -107,19 +140,22 @@ void app_main(void)
 // 4. Инициализация дисплея
     ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
-    ESP_ERROR_CHECK(esp_lcd_panel_invert_color(panel_handle, false));
-    ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, false, true)); // Ориентация как в Arduino
-    ESP_ERROR_CHECK(esp_lcd_panel_set_gap(panel_handle, 0, 0));
+   // ESP_ERROR_CHECK(esp_lcd_panel_invert_color(panel_handle, false));
+   // ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, false, true)); // Ориентация как в Arduino
+   // ESP_ERROR_CHECK(esp_lcd_panel_set_gap(panel_handle, 0, 0));
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
     ESP_LOGI(TAG, "Display initialized");
 
     // 5. Демонстрация работы
     ESP_LOGI(TAG, "Starting display demo...");
-    
+
+  
     // Заливка экрана разными цветами
     const uint16_t colors[] = {
-        COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_BLUE,
-        COLOR_CYAN, COLOR_MAGENTA, COLOR_YELLOW, COLOR_WHITE
+        COLOR_BLACK,
+        0xF800,
+        0x07E0,
+        0x001F, //RGB
     };
     
     for (int i = 0; i < sizeof(colors)/sizeof(colors[0]); i++) {
@@ -143,9 +179,11 @@ void app_main(void)
         }
         
         free(line_buffer);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-
+        vTaskDelay(pdMS_TO_TICKS(3000));
+        }
+        
+        
+/*
     // Рисуем геометрические фигуры
     ESP_LOGI(TAG, "Drawing geometric shapes...");
     
@@ -175,6 +213,30 @@ void app_main(void)
         esp_lcd_panel_draw_bitmap(panel_handle, x, y, x+3, y+3, circle_buffer);
         vTaskDelay(pdMS_TO_TICKS(50));
     }
+*/
 
     ESP_LOGI(TAG, "Display demo completed!");
+    // 5. Вывод изображения
+    ESP_LOGI(TAG, "Displaying image...");
+    
+    // Вариант 1: Прямой вывод (требует достаточно памяти)
+     esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, LCD_WIDTH, LCD_HEIGHT, image_data);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    
+    // Вариант 2: Построчный вывод (более экономичный)
+    uint16_t line_buffer[LCD_WIDTH];
+    for (int y = 0; y < LCD_HEIGHT; y++) {
+        // Копируем одну строку
+        for (int x = 0; x < LCD_WIDTH; x++) {
+            line_buffer[x] = image_data[y * LCD_WIDTH + x];
+        }
+        
+        // Отправляем строку
+        esp_lcd_panel_draw_bitmap(panel_handle, 0, y, LCD_WIDTH, y+1, line_buffer);
+        
+    }
+  
+    ESP_LOGI(TAG, "Image displayed successfully!");
+
+
 }
